@@ -1,13 +1,20 @@
 package util;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HttpRequestUtils {
+    private static final Logger logger = LoggerFactory.getLogger(HttpRequestUtils.class);
+
     /**
      * @param queryString은
      *            URL에서 ? 이후에 전달되는 field1=value1&field2=value2 형식임
@@ -49,8 +56,34 @@ public class HttpRequestUtils {
         return new Pair(tokens[0], tokens[1]);
     }
 
-    public static Pair parseHeader(String header) {
-        return getKeyValue(header, ": ");
+    public static Request parseRequest(String request) {
+        String[] methodAndPath = request.split(" ");
+        if (!methodAndPath[1].contains("?")) {
+            return new Request(methodAndPath[0], methodAndPath[1]);
+        }
+
+        String[] pathAndParams = methodAndPath[1].split("\\?");
+        return new Request(methodAndPath[0], pathAndParams[0], pathAndParams[1]);
+    }
+
+    public static Map<String, String> parseHeader(BufferedReader bufferedReader) {
+        String line = "";
+        Map<String, String> header = new HashMap<>();
+
+        do {
+            try {
+                line = bufferedReader.readLine();
+                logger.debug("header line: {}", line);
+                Pair pair = getKeyValue(line, ": ");
+
+                header.put(pair.getKey(), pair.getValue());
+            } catch (IOException e) {
+                logger.error(e.getMessage());
+            }
+        }
+        while (!line.equals("") && line != null);
+
+        return header;
     }
 
     public static class Pair {
