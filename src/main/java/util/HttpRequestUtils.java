@@ -70,18 +70,19 @@ public class HttpRequestUtils {
         String line = "";
         Map<String, String> header = new HashMap<>();
 
-        do {
-            try {
+        try {
+            do {
                 line = bufferedReader.readLine();
                 logger.debug("header line: {}", line);
                 Pair pair = getKeyValue(line, ": ");
-
-                header.put(pair.getKey(), pair.getValue());
-            } catch (IOException e) {
-                logger.error(e.getMessage());
+                if (pair != null) {
+                    header.put(pair.getKey(), pair.getValue());
+                }
             }
+            while (!line.equals("") && line != null);
+        } catch (IOException e) {
+            logger.error(e.getMessage());
         }
-        while (!line.equals("") && line != null);
 
         return header;
     }
